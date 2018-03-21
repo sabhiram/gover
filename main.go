@@ -61,6 +61,21 @@ func (v *version) unmarshal(s string) error {
 	return err
 }
 
+func (v *version) incrMajor() {
+	v.Major += 1
+	v.Minor = 0
+	v.Patch = 0
+}
+
+func (v *version) incrMinor() {
+	v.Minor += 1
+	v.Patch = 0
+}
+
+func (v *version) incrPatch() {
+	v.Patch += 1
+}
+
 func (v *version) update() error {
 	t, err := template.New("gover").Parse(tmpl)
 	if err != nil {
@@ -136,16 +151,12 @@ func incrFn(inc string) error {
 	switch inc {
 	case "major":
 		fmt.Printf("Major incremented.\n")
-		v.Major += 1
-		v.Minor = 0
-		v.Patch = 0
+		v.incrMajor()
 	case "minor":
 		fmt.Printf("Minor incremented.\n")
-		v.Minor += 1
-		v.Patch = 0
+		v.incrMinor()
 	case "patch":
 		fmt.Printf("Patch incremented.\n")
-		v.Patch += 1
 	default:
 		return fmt.Errorf("cannot increment %s", inc)
 	}
