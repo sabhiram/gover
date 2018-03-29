@@ -160,7 +160,7 @@ func versFn() error {
 		return err
 	}
 
-	fmt.Printf("Version: %d.%d.%d\n", v.Major, v.Minor, v.Patch)
+	fmt.Printf("%d.%d.%d\n", v.Major, v.Minor, v.Patch)
 	return nil
 }
 

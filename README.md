@@ -2,6 +2,10 @@
 
 Version golang applications.
 
+## Idea
+
+A command line tool to generate and manage a `version.go` file which keeps track of the current [semantic version](https://semver.org/) of the go application.
+
 ## Install
 
 ```
@@ -68,6 +72,6 @@ When trying to tag releases, we can use `gover` to construct the git release tag
 ```
 gover increment major
 go build .
-git -tag `gover version`
-git push ... -tags
+git tag `gover`
+git push ... --tags
 ```
