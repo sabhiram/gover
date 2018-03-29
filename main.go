@@ -29,6 +29,26 @@ const (
 `
 	versionKey     = "// Version: "
 	defaultVersion = "0.0.1"
+
+	usageStr = `gover <cmd> [options]
+
+Where "cmd" is one of:
+
+    init [<version>]        Create a "version_gen.go" file with the specified
+                            version tag.  If the version is not specified it 
+                            defaults to "0.0.1".
+
+    increment [<opt>]       Increment the <opt> section of the version where 
+                            "opt" can be one of: "patch", "minor", or "major". 
+                            If unspecified, "opt" defaults to "patch".  Once 
+                            incremented, all parts of the version of less 
+                            significance are reset.
+
+    version                 Print the current version found in the managed 
+                            "version_gen.go" file. 
+
+If "cmd" is unspecified, the current version in "version_gen.go" is reported.
+`
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +177,7 @@ func incrFn(inc string) error {
 		v.incrMinor()
 	case "patch":
 		fmt.Printf("Patch incremented.\n")
+		v.incrPatch()
 	default:
 		return fmt.Errorf("cannot increment %s", inc)
 	}
@@ -168,24 +189,32 @@ func incrFn(inc string) error {
 
 func main() {
 	var (
-		err error
-		pv  bool
+		err           = error(nil)
+		reportVersion = false
+		printUsage    = false
+		cmd           = "version"
 	)
 
-	cmd := "version"
 	if len(os.Args) >= 2 {
 		cmd = strings.ToLower(os.Args[1])
 	}
 
 	switch cmd {
 	case "init":
-		v := defaultVersion
+		vers := defaultVersion
 		if len(os.Args) >= 3 {
-			v = os.Args[2]
+			vers = os.Args[2]
 		}
-		err = initFn(v)
+		err = initFn(vers)
+
 	case "version", "vers":
-		pv = true
+		if _, err := os.Stat("version_gen.go"); os.IsNotExist(err) {
+			err = fmt.Errorf("version file missing, did you mean to run `gover init`?")
+			printUsage = true
+		} else {
+			reportVersion = true
+		}
+
 	case "increment", "inc":
 		o := "patch"
 		if len(os.Args) >= 3 {
@@ -193,19 +222,25 @@ func main() {
 		}
 		err = incrFn(o)
 		if err == nil {
-			pv = true
+			reportVersion = true
 		}
+
 	default:
-		err = fmt.Errorf("%s is an invalid command", cmd)
+		err = fmt.Errorf("invalid command specified")
+		printUsage = true
 	}
 
-	if err == nil && pv == true {
+	if err == nil && reportVersion == true {
 		err = versFn()
 	}
 
 	if err != nil {
 		fmt.Printf("Fatal error: %s\n", err.Error())
-		os.Exit(1)
+		defer os.Exit(1)
+	}
+
+	if printUsage {
+		fmt.Printf("%s\n", usageStr)
 	}
 }
 

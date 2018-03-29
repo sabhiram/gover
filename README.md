@@ -10,6 +10,29 @@ go get github.com/sabhiram/gover
 
 ## Usage
 
+```
+$ gover <cmd> [options]
+
+Where "cmd" is one of:
+
+    init [<version>]        Create a "version_gen.go" file with the specified
+                            version tag.  If the version is not specified it 
+                            defaults to "0.0.1".
+
+    increment [<opt>]       Increment the <opt> section of the version where 
+                            "opt" can be one of: "patch", "minor", or "major". 
+                            If unspecified, "opt" defaults to "patch".  Once 
+                            incremented, all parts of the version of less 
+                            significance are reset.
+
+    version                 Print the current version found in the managed 
+                            "version_gen.go" file. 
+
+If "cmd" is unspecified, the current version in "version_gen.go" is reported.
+```
+
+## Workflow
+
 In a directory with a `main` package:
 ```
 gover init [version]
@@ -38,7 +61,7 @@ const (
 )
 ```
 
-## Workflow
+## CI/CD Tagging 
 
 When trying to tag releases, we can use `gover` to construct the git release tag.  For example:
 
