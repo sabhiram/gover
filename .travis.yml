@@ -1,0 +1,28 @@
+language: go
+
+go:
+  - "1.10"
+  - tip
+
+env:
+  - "PATH=$HOME/gopath/bin:$PATH"
+
+before_install:
+  - go get github.com/mitchellh/gox
+
+script:
+  - go test -v ./...
+  - gox -os="linux darwin windows" -arch="amd64" -output="bin/{{.Dir}}_{{.OS}}_{{.Arch}}" -verbose ./...
+
+deploy:
+  provider: releases
+  api_key:
+    secure: K4a0yf/to0CcWM+oSfH0pnisnqO8NAtxDO8mHhL1qyDVioI2w6Vgc6nv2vrnkcAgpE8+kd+a48AG0rSAxr976h1ydmQiwZW9eUJqKoYWJyXy1/w0YCJia61IpDNovdRefaDpsteJ5ZgAlIGwdi7vh5hzdSB8kTLg4aQnVT42GEw=
+  file:
+    - bin/gover_darwin_amd64
+    - bin/gover_linux_amd64
+    - bin/gover_windows_amd64.exe
+  skip_cleanup: true
+  on:
+    repo: sabhiram/gover
+    tags: true
