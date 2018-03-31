@@ -3,7 +3,9 @@ package main
 ////////////////////////////////////////////////////////////////////////////////
 
 import (
+	"bytes"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -30,24 +32,32 @@ const (
 )
 `
 	versionKey     = "// Version: "
+	packageKey     = "package "
 	defaultVersion = "0.0.1"
 
 	usageStr = `gover <cmd> [options]
 
 Where "cmd" is one of:
 
-    init [<version>]        Create a "version_gen.go" file with the specified
-                            version tag.  If the version is not specified it 
-                            defaults to "0.0.1".
+    init [-version <x.y.z>] [-package <p>]
 
-    increment [<opt>]       Increment the <opt> section of the version where 
-                            "opt" can be one of: "patch", "minor", or "major". 
-                            If unspecified, "opt" defaults to "patch".  Once 
-                            incremented, all parts of the version of less 
-                            significance are reset.
+        Create a "version_gen.go" file with the specified version tag.  If the
+        version is not specified it defaults to "0.0.1".
 
-    version                 Print the current version found in the managed 
-                            "version_gen.go" file. 
+        If the "-package" is specified, the file is generated under the package
+        "<p>".  If omitted, the package defaults to "main".
+
+    increment [<opt>]
+
+        Increment the <opt> section of the version where "opt" can be one of:
+        "patch", "minor", or "major".
+
+        If unspecified, "opt" defaults to "patch".  Once incremented, all parts
+        of the version of less significance are reset.
+
+    version
+
+        Print the current version found in the managed "version_gen.go" file.
 
 If "cmd" is unspecified, the current version in "version_gen.go" is reported.
 `
@@ -56,12 +66,13 @@ If "cmd" is unspecified, the current version in "version_gen.go" is reported.
 ////////////////////////////////////////////////////////////////////////////////
 
 type version struct {
-	Major uint64
-	Minor uint64
-	Patch uint64
+	PackageName string
+	Major       uint64
+	Minor       uint64
+	Patch       uint64
 }
 
-func (v *version) unmarshal(s string) error {
+func (v *version) unmarshalSemVer(s string) error {
 	var err error
 
 	items := strings.Split(s, ".")
@@ -110,10 +121,7 @@ func (v *version) update() error {
 	}
 	defer f.Close()
 
-	return t.Execute(f, &context{
-		version:     v,
-		PackageName: "main",
-	})
+	return t.Execute(f, v)
 }
 
 func fromFile() (*version, error) {
@@ -123,14 +131,24 @@ func fromFile() (*version, error) {
 	}
 
 	fc := string(bs)
-	if idx := strings.Index(fc, versionKey); idx > 0 {
+	v := &version{
+		PackageName: "main",
+	}
+
+	if idx := strings.Index(fc, packageKey); idx >= 0 {
+		pkg := fc[idx+len(packageKey):]
+		if idx = strings.Index(pkg, "\n"); idx >= 0 {
+			pkg = pkg[:idx]
+		}
+		v.PackageName = pkg
+	}
+
+	if idx := strings.Index(fc, versionKey); idx >= 0 {
 		ver := fc[idx+len(versionKey):]
-		if idx = strings.Index(ver, "\n"); idx > 0 {
+		if idx = strings.Index(ver, "\n"); idx >= 0 {
 			ver = ver[:idx]
 		}
-
-		v := &version{}
-		return v, v.unmarshal(ver)
+		return v, v.unmarshalSemVer(ver)
 	}
 
 	return nil, errors.New("version not found in gen file")
@@ -138,18 +156,12 @@ func fromFile() (*version, error) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type context struct {
-	*version
-	PackageName string
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-func initFn(s string) error {
+func initFn(sv, pn string) error {
 	var v version
-	if err := v.unmarshal(s); err != nil {
+	if err := v.unmarshalSemVer(sv); err != nil {
 		return err
 	}
+	v.PackageName = pn
 
 	return v.update()
 }
@@ -195,19 +207,28 @@ func main() {
 		reportVersion = false
 		printUsage    = false
 		cmd           = "version"
+		args          = []string{}
 	)
 
 	if len(os.Args) >= 2 {
 		cmd = strings.ToLower(os.Args[1])
+		args = os.Args[2:]
 	}
 
 	switch cmd {
 	case "init":
-		vers := defaultVersion
-		if len(os.Args) >= 3 {
-			vers = os.Args[2]
+		var pn, vs string
+		fs := flag.NewFlagSet("init-option", flag.PanicOnError)
+		fs.SetOutput(bytes.NewBuffer([]byte{}))
+		fs.StringVar(&vs, "version", defaultVersion, "Override init version")
+		fs.StringVar(&vs, "v", defaultVersion, "Override init version (short)")
+		fs.StringVar(&pn, "package", "main", "Override package name")
+		fs.StringVar(&pn, "p", "main", "Override package name (short)")
+		if err = fs.Parse(args); err != nil {
+			printUsage = true
+			break
 		}
-		err = initFn(vers)
+		err = initFn(vs, pn)
 
 	case "version", "vers":
 		if _, err := os.Stat("version_gen.go"); os.IsNotExist(err) {
