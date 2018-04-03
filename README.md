@@ -1,5 +1,7 @@
 # gover
 
+[![Build Status](https://travis-ci.org/sabhiram/gover.svg?branch=master)](https://travis-ci.org/sabhiram/gover)
+
 Version golang applications.
 
 ## Idea
@@ -46,20 +48,10 @@ If "cmd" is unspecified, the current version in "version_gen.go" is reported.
 
 In a directory with a `main` package:
 ```
-gover init [version]
+gover init -version 0.0.1 [-package main]
 ```
 
 This creates a `version_gen.go` file in the current directory, and sets the starting version to `0.0.1` unless specified in the `init` step above.
-
-To increment the version:
-```
-gover increment [patch=default|minor|major]
-```
-
-To read the current version from the command line:
-```
-gover [version]
-```
 
 Your `main` package will have access to:
 ```
@@ -70,6 +62,42 @@ const (
 
     Version = "0.0.1"
 )
+```
+
+Increment the version's major:
+```
+gover increment major
+
+#   - or -
+
+gover major
+```
+
+Increment the version's minor:
+```
+gover increment minor
+
+#   - or -
+
+gover minor
+```
+
+Increment the version's patch:
+```
+gover increment patch
+
+#   - or -
+
+gover patch
+```
+
+Read the current version from the command line:
+```
+gover version
+
+#   - or -
+
+gover
 ```
 
 ## CI/CD Tagging
