@@ -55,6 +55,18 @@ Where "cmd" is one of:
         If unspecified, "opt" defaults to "patch".  Once incremented, all parts
         of the version of less significance are reset.
 
+    major
+
+    	Same as "increment major".
+
+    minor
+
+    	Same as "increment minor".
+
+    patch
+
+    	Same as "increment patch".
+
     version
 
         Print the current version found in the managed "version_gen.go" file.
@@ -238,13 +250,16 @@ func main() {
 			reportVersion = true
 		}
 
-	case "increment", "inc":
+	case "increment", "inc", "major", "minor", "patch":
 		o := "patch"
-		if len(os.Args) >= 3 {
-			o = strings.ToLower(os.Args[2])
+		if len(args) >= 1 {
+			o = strings.ToLower(args[0])
 		}
-		err = incrFn(o)
-		if err == nil {
+		switch cmd {
+		case "major", "minor", "patch":
+			o = cmd
+		}
+		if err = incrFn(o); err == nil {
 			reportVersion = true
 		}
 
