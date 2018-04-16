@@ -88,7 +88,7 @@ func main() {
 		err = version.Init(vs, pn)
 
 	case "version", "vers":
-		if _, err := os.Stat("version_gen.go"); os.IsNotExist(err) {
+		if _, err = os.Stat("version_gen.go"); os.IsNotExist(err) {
 			err = fmt.Errorf("version file missing, did you mean to run `gover init`?")
 			printUsage = true
 		} else {
