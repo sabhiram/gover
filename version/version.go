@@ -18,11 +18,11 @@ const (
 // Version: {{ .Major }}.{{ .Minor }}.{{ .Patch }}
 
 const (
-    Major = {{ .Major }}
-    Minor = {{ .Minor }}
-    Patch = {{ .Patch }}
+	Major = {{ .Major }}
+	Minor = {{ .Minor }}
+	Patch = {{ .Patch }}
 
-    Version = "{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+	Version = "{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
 )
 `
 	versionKey = "// Version: "

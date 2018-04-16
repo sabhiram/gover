@@ -38,15 +38,15 @@ Where "cmd" is one of:
 
     major
 
-    	Same as "increment major".
+        Same as "increment major".
 
     minor
 
-    	Same as "increment minor".
+        Same as "increment minor".
 
     patch
 
-    	Same as "increment patch".
+        Same as "increment patch".
 
     version
 
